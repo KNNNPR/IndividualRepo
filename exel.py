@@ -21,37 +21,9 @@ def delete_excel_file_after_delay(file_path, delay_hours):
         print(f"Ошибка при удалении файла {file_path}: {e}")
 
 
-# Пример использования
-# file_path = "output.xlsx"
+
 delay_hours = 2
 
-# delete_excel_file_after_delay(file_path, delay_hours)
-
-#
-# def search_excel(file_path, search_value):
-#     workbook = load_workbook(file_path)
-#     sheet = workbook.active
-#
-#     # Проход по всем ячейкам в таблице
-#     for row in sheet.iter_rows():
-#         for cell in row:
-#             if cell.value == search_value:
-#                 # Найдено совпадение
-#                 print(f"Найдено совпадение в ячейке {cell.coordinate}: {cell.value}")
-#                 return cell  # Можно изменить на return cell, если нужно вернуть ячейку
-#
-#     # Совпадение не найдено
-#     print("Совпадение не найдено")
-#
-
-# Пример использования
-# file_path = "IIT_1-kurs_22_23_vesna_27.04.2023.xlsx"
-# search_value = "значение_для_поиска"
-
-
-# search_excel(file_path, search_value)
-
-# print(search_excel("IIT_1-kurs_22_23_vesna_27.04.2023.xlsx", "ИКБО-23-22"))
 
 globalNumber = -1
 isSetGlobalNumber = False
@@ -59,8 +31,6 @@ isSetGlobalNumber = False
 
 def search_excel(file_path, search_value):
     global globalNumber, isSetGlobalNumber
-    if isSetGlobalNumber:
-        return globalNumber
     workbook = load_workbook(file_path)
     sheet = workbook.active
 
