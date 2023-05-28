@@ -7,7 +7,7 @@ from schedule import *
 
 import os
 import time
-
+import asyncio
 
 def delete_excel_file_after_delay(file_path, delay_hours):
     # Ожидание указанного количества часов
@@ -204,3 +204,5 @@ def check_bot_and_group_format(s):
         return True
     else:
         return False
+
+
