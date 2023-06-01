@@ -1,13 +1,13 @@
-import requests
-from openpyxl import Workbook
 from openpyxl import load_workbook
-from datetime import date
 import calendar
-from schedule import *
-
 import os
 import time
-import asyncio
+from datetime import date
+
+from openpyxl import load_workbook
+
+from schedule import *
+
 
 def delete_excel_file_after_delay(file_path, delay_hours):
     # Ожидание указанного количества часов
@@ -42,8 +42,6 @@ def search_excel(file_path, search_value):
         if cell.value == search_value:
             # Match found
             column_number = cell.column
-            # print(f"Found a match in cell {cell.coordinate}: {cell.value}")
-            #print(globalNumber, " ", column_number)
             globalNumber = column_number
 
             isSetGlobalNumber = True

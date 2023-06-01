@@ -3,37 +3,9 @@ import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from pprint import pprint
 from vk_api.utils import get_random_id
-#from config import open_weather_token
 
 
-def main():
-    vk_session = vk_api.VkApi(token='467e9329e78d70b728147eb922f99675')
-    vk = vk_session.get_api()
-    longpoll = VkLongPoll(vk_session)
-
-    for event in longpoll.listen():
-        if event.type == VkEventType.MESSAGE_NEW and event.text:
-            print('New from {}, text = {}'.format(event.user_id, event.text))
-
-            if event.text.lower() == 'начать' or event.text.lower() == 'привет':
-                user_name = vk.users.get(user_id=event.user_id)[0]['first_name']
-
-                vk.messages.send(
-                    user_id=event.user_id,
-                    random_id=get_random_id(),
-                    message='Привет, ' + user_name
-                )
-
-            if event.text.lower() == 'погода' or event.text.lower() == 'weather':
-                city = "Москва"
-                weather_message = get_weather(city, open_weather_token)
-
-                if weather_message:
-                    vk.messages.send(
-                        user_id=event.user_id,
-                        random_id=get_random_id(),
-                        message=weather_message
-                    )
+# from config import open_weather_token
 
 
 def get_bofort_scale(wind_speed):
@@ -129,6 +101,3 @@ def get_weather(city, open_weather_token):
 
     except Exception as ex:
         pass
-
-
-

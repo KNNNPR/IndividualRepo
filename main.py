@@ -1,11 +1,6 @@
-import vk_api
-from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-from datetime import datetime, timedelta
-import calendar
-from vk_api.utils import get_random_id
+
 from exel import *
-from datetime import datetime, timedelta
 from schedule import *
 from weather import *
 
@@ -60,8 +55,36 @@ def send_schedule_even(user_id, schedule):
     )
 
 
-# file_path = "IIT_1-kurs_22_23_vesna_27.04.2023.xlsx"
-# Функция обработки сообщений
+def send_group_if_none(schedule_even, schedule_uneven):
+    if (schedule_uneven is None) or (schedule_even is None):
+        vk.messages.send(
+            user_id=event.user_id,
+            random_id=get_random_id(),
+            message='Такая группа не найдена',
+            keyboard=keyboard.get_keyboard()
+
+        )
+        return False
+    else:
+        return True
+
+
+def group_is_none():
+    vk.messages.send(
+        user_id=event.user_id,
+        random_id=get_random_id(),
+        message='Такая группа не найдена',
+        keyboard=keyboard.get_keyboard()
+
+    )
+
+
+def send_schedule_about_day(schedule_uneven, schedule_even, user_id):
+    formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
+    formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
+    send_schedule_uneven(user_id, formatted_schedule_uneven)
+    send_schedule_even(user_id, formatted_schedule_even)
+
 
 user_group = ''
 temp_user_group = ''
@@ -69,7 +92,6 @@ file_path = ''
 from datetime import datetime, timedelta
 
 
-# print(links)
 def handle_message(event):
     global user_group, file_path, temp_user_group
     user_id = event.user_id
@@ -140,26 +162,14 @@ def handle_message(event):
     elif message == 'расписание на сегодня':
         schedule = get_day_schedule(file_path, day, current_week)
         if schedule is None:
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
+            group_is_none()
         else:
             formatted_schedule = '\n'.join([' '.join(lesson_info) for lesson_info in schedule])
             send_schedule(user_id, formatted_schedule)
     elif message == 'расписание на завтра' and day == "Sunday":
         schedule = get_day_schedule(file_path, tomorrow_weekday, current_week + 1)
         if schedule == None:
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
+            group_is_none
         else:
             formatted_schedule = '\n'.join([' '.join(lesson_info) for lesson_info in schedule])
             send_schedule(user_id, formatted_schedule)
@@ -167,13 +177,7 @@ def handle_message(event):
     elif message == 'расписание на завтра' and day != "Sunday":
         schedule = get_day_schedule(file_path, tomorrow_weekday, current_week)
         if schedule == None:
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
+            group_is_none
         else:
             formatted_schedule = '\n'.join([' '.join(lesson_info) for lesson_info in schedule])
             send_schedule(user_id, formatted_schedule)
@@ -196,13 +200,7 @@ def handle_message(event):
     elif message == 'на эту неделю':
         week_schedule = get_week_schedule(file_path, current_week)
         if week_schedule is None:
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
+            group_is_none
         else:
             formatted_week_schedule = '\n\n'.join([f'{day}:\n{schedule}' for day, schedule in week_schedule.items()])
             send_schedule(user_id, formatted_week_schedule)
@@ -210,13 +208,7 @@ def handle_message(event):
     elif message == 'на следующую неделю':
         week_schedule = get_week_schedule(file_path, current_week + 1)
         if week_schedule is None:
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
+            group_is_none
         else:
             formatted_week_schedule = '\n\n'.join([f'{day}:\n{schedule}' for day, schedule in week_schedule.items()])
             send_schedule(user_id, formatted_week_schedule)
@@ -224,104 +216,38 @@ def handle_message(event):
     elif message == "бот " + "понедельник":
         schedule_uneven = get_day_schedule(file_path, "Monday", 2)
         schedule_even = get_day_schedule(file_path, "Monday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif message == "бот " + "вторник":
         schedule_uneven = get_day_schedule(file_path, "Tuesday", 2)
         schedule_even = get_day_schedule(file_path, "Tuesday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif message == "бот " + "среда":
         schedule_uneven = get_day_schedule(file_path, "Wednesday", 2)
         schedule_even = get_day_schedule(file_path, "Wednesday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif message == "бот " + "четверг":
         schedule_uneven = get_day_schedule(file_path, "Thursday", 2)
         schedule_even = get_day_schedule(file_path, "Thursday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif message == "бот " + "пятница":
         schedule_uneven = get_day_schedule(file_path, "Friday", 2)
         schedule_even = get_day_schedule(file_path, "Friday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif message == "бот " + "суббота":
         schedule_uneven = get_day_schedule(file_path, "Saturday", 2)
         schedule_even = get_day_schedule(file_path, "Saturday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     ############
     elif len(message_words) > 2 and message_words[0] == 'бот' and check_group_format(message_words[2].strip()) and \
@@ -330,19 +256,8 @@ def handle_message(event):
         temp_file_path = create_file(temp_user_group, links)
         schedule_uneven = get_day_schedule(temp_file_path, "Monday", 2)
         schedule_even = get_day_schedule(temp_file_path, "Monday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif len(message_words) > 2 and message_words[0] == 'бот' and check_group_format(message_words[2].strip()) and \
             message_words[1] == "вторник":
@@ -350,19 +265,8 @@ def handle_message(event):
         temp_file_path = create_file(temp_user_group, links)
         schedule_uneven = get_day_schedule(temp_file_path, "Tuesday", 2)
         schedule_even = get_day_schedule(temp_file_path, "Tuesday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif len(message_words) > 2 and message_words[0] == 'бот' and check_group_format(message_words[2].strip()) and \
             message_words[1] == "среда":
@@ -370,19 +274,8 @@ def handle_message(event):
         temp_file_path = create_file(temp_user_group, links)
         schedule_uneven = get_day_schedule(temp_file_path, "Wednesday", 2)
         schedule_even = get_day_schedule(temp_file_path, "Wednesday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif len(message_words) > 2 and message_words[0] == 'бот' and check_group_format(message_words[2].strip()) and \
             message_words[1] == "четверг":
@@ -390,19 +283,8 @@ def handle_message(event):
         temp_file_path = create_file(temp_user_group, links)
         schedule_uneven = get_day_schedule(temp_file_path, "Thursday", 2)
         schedule_even = get_day_schedule(temp_file_path, "Thursday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif len(message_words) > 2 and message_words[0] == 'бот' and check_group_format(message_words[2].strip()) and \
             message_words[1] == "пятница":
@@ -410,19 +292,8 @@ def handle_message(event):
         temp_file_path = create_file(temp_user_group, links)
         schedule_uneven = get_day_schedule(temp_file_path, "Friday", 2)
         schedule_even = get_day_schedule(temp_file_path, "Friday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
     elif len(message_words) > 2 and message_words[0] == 'бот' and check_group_format(message_words[2].strip()) and \
             message_words[1] == "суббота":
@@ -430,19 +301,8 @@ def handle_message(event):
         temp_file_path = create_file(temp_user_group, links)
         schedule_uneven = get_day_schedule(temp_file_path, "Saturday", 2)
         schedule_even = get_day_schedule(temp_file_path, "Saturday", 3)
-        if (schedule_uneven is None) or (schedule_even is None):
-            vk.messages.send(
-                user_id=event.user_id,
-                random_id=get_random_id(),
-                message='Такая группа не найдена',
-                keyboard=keyboard.get_keyboard()
-
-            )
-        else:
-            formatted_schedule_uneven = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_uneven])
-            formatted_schedule_even = '\n'.join([' '.join(lesson_info) for lesson_info in schedule_even])
-            send_schedule_uneven(user_id, formatted_schedule_uneven)
-            send_schedule_even(user_id, formatted_schedule_even)
+        if send_group_if_none(schedule_even, schedule_uneven):
+            send_schedule_about_day(schedule_uneven, schedule_even, user_id)
 
 
     elif message == "погода":
