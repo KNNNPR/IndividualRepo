@@ -254,7 +254,7 @@ def professor_schedule(vk_event, professor):
         for i, lesson in enumerate(schedule):
             lesson = i + 1
             lesson_info = ", ".join(lesson.values())
-            #msg += str(lesson_num) + ") " + lesson_info + "\n"
+            # msg += str(lesson_num) + ") " + lesson_info + "\n"
 
     vk.messages.send(
         user_id=vk_event.user_id,

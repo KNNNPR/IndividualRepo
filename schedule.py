@@ -117,10 +117,29 @@ schedule_first = get_course_schedule()
 schedule_second = get_course_schedule(2)
 schedule_third = get_course_schedule(3)
 
-#print(schedule_first)
-#print(professors)
+# print(schedule_first)
+# print(professors)
 professor_names = list(professors.keys())
-print(professor_names)
+
+
+def search_professor_by_surname(surname: str, professor_names_clear: list) -> list:
+    result = []
+    for professor in professor_names_clear:
+        if surname == professor.split()[0]:
+            result.append(professor)
+    return result
+
+
+# разделить имена преподавателей по запятой
+professor_names = [name.strip() for name in ','.join(professor_names).split(',')]
+
+# убрать дубликаты
+professor_names = list(set(professor_names))
+pattern_for_proffesors = r'\d+\s+[п|П]/[г|Г]'
+professor_names_clear = [i for i in professor_names if i not in ['', '--'] and not re.search(pattern_for_proffesors, i)]
+
+print(professor_names_clear)
+print(search_professor_by_surname("Красников", professor_names_clear))
 
 with open("course1_sch.json", "w") as write_file:
     json.dump(schedule_first, write_file)
