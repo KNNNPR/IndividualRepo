@@ -1,15 +1,16 @@
 import json
 import random
 import re
-
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.utils import get_random_id
 import vk_api
 from vk_api import VkUpload
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 from config import token, check_group_format
 from parsing_links import week_number
-from weather import *
-
+from weather import weather_keyboard, current_weather, day_weather, week_weather
+import datetime
 vk_session = vk_api.VkApi(token=token)
 vk = vk_session.get_api()
 upload = VkUpload(vk_session)
@@ -35,8 +36,6 @@ eng_to_rus = {"Thunderstorm": "гроза", "Drizzle": "морось", "Rain": "
               "Dust": "пыль", "Sand": "песчаная буря", "Ash": "пепел",
               "Squall": "шквалистый ветер", "Tornado": "ураган",
               "Clouds": "облачно", "Clear": "ясно"}
-
-
 
 # MIREA schedule
 weekdays = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
@@ -85,8 +84,7 @@ def instructions(vk_event):
                 'Этот бот умеет выдавать расписание студентов ИИТ РТУ МИРЭА и сообщать о погоде. '
                 'Для каждого раздела есть свои команды. Чтобы увидеть список доступных команд (кнопки) в любое время, отправьте сообщение "бот".\n\n'
                 'Список команд бота:\n\n'
-                '"Ковид" - статистика по заболеваниям в России за последние сутки и график заболевамости за последние 10 дней,\n\n'
-                'Название группы в формате "ИXБО-XX-XX" - основная группа, по которой будет выдаваться расписание (необходимо набирать каждый раз при заходе в диалог с ботом),\n\n'
+                'Название группы в формате "ИКБО-XX-XX" - основная группа, по которой будет выдаваться расписание (необходимо набирать каждый раз при заходе в диалог с ботом),\n\n'
                 '"Какая группа?" - основная группа на данный момент,\n\n'
                 '"Какая неделя?" - номер текущей недели, \n\n'
                 '"Расписание на сегодня", "Расписание на завтра", "Расписание на эту неделю", "Расписание на следующую неделю" - подробное расписание занятий на соответствующий период,\n\n'
@@ -230,7 +228,8 @@ def print_week_schedule(vk_event, group, next_week=False):
     vk.messages.send(
         user_id=vk_event.user_id,
         random_id=get_random_id(),
-        message=msg
+        message=msg,
+        keyboard=keyboard.get_keyboard()
     )
 
 
@@ -338,7 +337,7 @@ for event in longpoll.listen():
         elif event.text.lower() == "погода" or event.text.lower() == "погоду":
             weather_keyboard(event)
         elif event.text.lower() == "сейчас":
-            current_weather(event)
+            current_weather(event.text.lower)
         elif event.text.lower() == "сегодня":
             day_weather(event)
         elif event.text.lower() == "завтра":

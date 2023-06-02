@@ -56,7 +56,7 @@ def get_course_schedule(course=1, request_res=results):
             groups.append(group_name)
             week = {"понедельник": None, "вторник": None, "среда": None, "четверг": None, "пятница": None,
                     "суббота": None, "воскресенье": "Выходной! Пар нет"}
-            for day in range(7):
+            for day in range(6):
                 lessons = [[], [], [], [], [], [], []]
                 for para in range(7):
                     for week_oddity in range(2):
