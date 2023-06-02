@@ -3,8 +3,6 @@ weather_api_key = "467e9329e78d70b728147eb922f99675"
 group_id = 'club220830792'
 
 import re
-
-
 def check_group_format(group_number):
     pattern = r'^[A-Za-zА-Яа-я]{4}-\d{2}-\d{2}$'
     match = re.match(pattern, group_number)

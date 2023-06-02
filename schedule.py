@@ -1,5 +1,6 @@
 import json
 import re
+from copy import deepcopy as copy
 
 import openpyxl
 import requests
@@ -9,24 +10,23 @@ weekdays = ["понедельник", "вторник", "среда", "четв�
 group_regex = r"И[АВКНМ]{1}БО-[0-9]{2}-1[7-9]{1}"
 pattern = r'^[A-Za-zА-Яа-я]{4}-\d{2}-\d{2}$'
 
-
 # print(results)
-# professors = {}
-#
-#
-# def set_professor(name, lesson, week_day, para_num, week_oddity):
-#     if name not in professors:
-#         day = [[None] * 2, [None] * 2, [None] * 2, [None] * 2, [None] * 2, [None] * 2]
-#         week = {'понедельник': copy(day), 'вторник': copy(day), 'среда': copy(day), 'четверг': copy(day),
-#                 'пятница': copy(day),
-#                 'суббота': copy(day)}
-#         professors.update({name: week})
-#
-#     professors[name][week_day][para_num][week_oddity] = lesson
-#
-#
-# def find_professors_by_last_name(last_name):
-#     return [key for key, value in professors.items() if key.startswith(last_name)]
+professors = {}
+
+
+def set_professor(name, lesson, week_day, para_num, week_oddity):
+    if name not in professors:
+        day = [[None] * 2, [None] * 2, [None] * 2, [None] * 2, [None] * 2, [None] * 2]
+        week = {'понедельник': copy(day), 'вторник': copy(day), 'среда': copy(day), 'четверг': copy(day),
+                'пятница': copy(day),
+                'суббота': copy(day)}
+        professors.update({name: week})
+
+    professors[name][week_day][para_num][week_oddity] = lesson
+
+
+def find_professors_by_last_name(last_name):
+    return [key for key, value in professors.items() if key.startswith(last_name)]
 
 
 def get_course_schedule(course=1, request_res=results):
@@ -96,16 +96,16 @@ def get_course_schedule(course=1, request_res=results):
                                   "Аудитория": classroom, "Ссылка": url}
                         lessons[para].append(lesson)
 
-                        # professors_list = lecturer.split('; ')
-                        # subject_list = subject.split('; ')
-                        # pr_lesson = copy(lesson)
-                        # pr_lesson.pop('Преподаватель')
-                        # pr_lesson['Группа'] = group_name
-                        #
-                        # for h in range(len(professors_list)):
-                        #     if len(subject_list) > h:
-                        #         pr_lesson['Предмет'] = subject_list[h]
-                        #     set_professor(professors_list[h], pr_lesson, weekdays[day], day, week_oddity)
+                        professors_list = lecturer.split('; ')
+                        subject_list = subject.split('; ')
+                        pr_lesson = copy(lesson)
+                        pr_lesson.pop('Преподаватель')
+                        pr_lesson['Группа'] = group_name
+
+                        for h in range(len(professors_list)):
+                            if len(subject_list) > h:
+                                pr_lesson['Предмет'] = subject_list[h]
+                            set_professor(professors_list[h], pr_lesson, weekdays[day], day, week_oddity)
 
                 week[weekdays[day]] = lessons
             schedule.update({group_name: week})
@@ -117,8 +117,8 @@ schedule_first = get_course_schedule()
 schedule_second = get_course_schedule(2)
 schedule_third = get_course_schedule(3)
 
-print(schedule_first)
-# pprint(professors)
+#print(schedule_first)
+print(professors)
 
 with open("course1_sch.json", "w") as write_file:
     json.dump(schedule_first, write_file)
@@ -127,5 +127,5 @@ with open("course2_sch.json", "w") as write_file:
 with open("course3_sch.json", "w") as write_file:
     json.dump(schedule_third, write_file)
 
-# with open("professors.json", 'w') as write_file:
-#     write_file.write(json.dumps(professors, ensure_ascii=False, indent=4))
+with open("professors.json", 'w') as write_file:
+    write_file.write(json.dumps(professors, ensure_ascii=False, indent=4))
