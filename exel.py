@@ -203,4 +203,7 @@ def check_bot_and_group_format(s):
     else:
         return False
 
+def save_user_group(user_id, group):
+    with open('user_group.csv', 'a') as f:
+        f.write(f"{user_id},{group}\n")
 
