@@ -99,6 +99,7 @@ def current_weather(vk_event):
         random_id=get_random_id(),
         message=new_s
     )
+    weather_keyboard(vk_event)
 
 
 def day_weather(vk_event, next_day=False):
@@ -513,6 +514,7 @@ keyboard.add_button('Какая группа?', color=VkKeyboardColor.SECONDARY)
 for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW and event.to_me:
         msg_words = event.text.lower().split()
+        print('id{}: "{}"'.format(event.user_id, event.text), end='\n')
         if event.text.lower() == "начать":
             greeting(event)
             instructions(event)
@@ -551,7 +553,7 @@ for event in longpoll.listen():
         elif event.text.lower() == "погода" or event.text.lower() == "погоду":
             weather_keyboard(event)
         elif event.text.lower() == "сейчас":
-            current_weather(event.text.lower)
+            current_weather(event)
         elif event.text.lower() == "сегодня":
             day_weather(event)
         elif event.text.lower() == "завтра":
