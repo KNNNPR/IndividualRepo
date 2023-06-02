@@ -1,8 +1,9 @@
 import datetime
 import json
 import math
-import re
 import random
+import re
+
 import PIL.Image as Image
 import requests
 from vk_api import vk_api, VkUpload
@@ -12,6 +13,7 @@ from vk_api.utils import get_random_id
 
 from config import token, check_group_format, weather_api_key
 from parsing_links import week_number
+from schedule import professors
 
 vk_session = vk_api.VkApi(token=token)
 vk = vk_session.get_api()
@@ -243,6 +245,22 @@ def weather_keyboard(vk_event):
     )
 
 
+def schedule_keyboard(vk_event, ):
+    temp_keyboard = VkKeyboard(one_time=True)
+    temp_keyboard.add_button('Расписание на сегодня', color=VkKeyboardColor.POSITIVE)
+    temp_keyboard.add_button('Расписание на завтра', color=VkKeyboardColor.NEGATIVE)
+    temp_keyboard.add_line()  # Добавляем новую строку
+    temp_keyboard.add_button('На эту неделю', color=VkKeyboardColor.PRIMARY)
+    temp_keyboard.add_button('На следующую неделю', color=VkKeyboardColor.PRIMARY)
+    temp_keyboard.add_line()  # Добавляем новую строку
+    vk.messages.send(
+        user_id=vk_event.user_id,
+        random_id=get_random_id(),
+        message="Показать расписание преподавателя", #todo имя препода
+        keyboard=temp_keyboard.get_keyboard()
+    )
+
+#todo присылать расписание преподов
 def professor_schedule(vk_event, professor):
     msg = ""
     professors = proffesors_schedule
@@ -254,7 +272,7 @@ def professor_schedule(vk_event, professor):
         for i, lesson in enumerate(schedule):
             lesson = i + 1
             lesson_info = ", ".join(lesson.values())
-            # msg += str(lesson_num) + ") " + lesson_info + "\n"
+            #msg += str(lesson_num) + ") " + lesson_info + "\n"
 
     vk.messages.send(
         user_id=vk_event.user_id,
@@ -263,18 +281,19 @@ def professor_schedule(vk_event, professor):
     )
 
 
-def proffesors_keyboard(professors_list, e):
-    keyboard = VkKeyboard(one_time=True)
-    # Add professor names as buttons
+def proffesors_keyboard(professors_list, vk_event):
+    # Create a dictionary to group professors with the same surname
+    temp_keyboard = VkKeyboard(one_time=True)
+    VkKeyboard.MAX_BUTTONS_ON_LINE = 1
     for prof_name in professors_list:
-        keyboard.add_button(prof_name, VkKeyboardColor.DEFAULT)
+        temp_keyboard.add_button(label=prof_name, color=VkKeyboardColor.PRIMARY)
 
-    # Add the "cancel" button at the end
-    keyboard.add_button("Отмена", VkKeyboardColor.NEGATIVE)
-
-    # Set the keyboard to vertical layout and return it
-    keyboard = keyboard.get_keyboard()
-    return keyboard
+    vk.messages.send(
+        user_id=vk_event.user_id,
+        random_id=get_random_id(),
+        message="Выберите преподавателя",
+        keyboard=temp_keyboard.get_keyboard()
+    )
 
 
 # images
@@ -330,7 +349,7 @@ def instructions(vk_event):
                 'Этот бот умеет выдавать расписание студентов ИИТ РТУ МИРЭА и сообщать о погоде. '
                 'Для каждого раздела есть свои команды. Чтобы увидеть список доступных команд (кнопки) в любое время, отправьте сообщение "бот".\n\n'
                 'Список команд бота:\n\n'
-                'Название группы в формате "ИКБО-XX-XX" - основная группа, по которой будет выдаваться расписание (необходимо набирать каждый раз при заходе в диалог с ботом),\n\n'
+                'Название группы в формате "ИКБО-XX-XX" - основная группа, по которой будет выдаваться расписание\n\n'
                 '"Какая группа?" - основная группа на данный момент,\n\n'
                 '"Какая неделя?" - номер текущей недели, \n\n'
                 '"Расписание на сегодня", "Расписание на завтра", "Расписание на эту неделю", "Расписание на следующую неделю" - подробное расписание занятий на соответствующий период,\n\n'
@@ -338,10 +357,9 @@ def instructions(vk_event):
                 '"Бот <день недели>" - расписание для нечетной и четной недели в соответствующий день у основной группы,\n\n'
                 '"Бот <день недели> <группа>" - расписание для нечетной и четной недели в соответствующий день у указанной группы,\n\n'
                 '"Погода" - погода в Москве на выбранный период времени.\n\n'
-
-                'Если команда не будет совпадать со списком перечисленных, бот кинет обидку. Удачи!',
+                '"Найти <фамилия преподавателя>" - расписание выбраного преподавателя\n\n'
+                'Если команда не будет совпадать со списком перечисленных, бот кинет обидку. Удачи!'
     )
-
 
 def show_functions(vk_event):
     vk.messages.send(
@@ -363,14 +381,14 @@ def unknown(vk_event):
 
 def set_current_group(vk_event, group):
     global current_group
-    current_group = str(group).upper()
+    save_group(vk_event.user_id, group)
+    current_group = load_group(vk_event.user_id)
     vk.messages.send(
         user_id=vk_event.user_id,
         random_id=get_random_id(),
         message="Я запомнил, что ты из группы " + current_group,
         keyboard=keyboard.get_keyboard()
     )
-
 
 def print_current_group(vk_event):
     if current_group == "":
@@ -456,7 +474,8 @@ def print_day_schedule(vk_event, group, day=todays_date, next_week=False):
         message=day_schedule(group, day, for_next_week=next_week),
         keyboard=keyboard.get_keyboard()
     )
-
+    global current_group
+    current_group = load_group(vk_event.user_id)
 
 def print_week_schedule(vk_event, group, next_week=False):
     msg = ""
@@ -477,7 +496,8 @@ def print_week_schedule(vk_event, group, next_week=False):
         message=msg,
         keyboard=keyboard.get_keyboard()
     )
-
+    global current_group
+    current_group = load_group(vk_event.user_id)
 
 def weekday_schedule(vk_event, weekday, group):
     msg = ""
@@ -515,6 +535,8 @@ def weekday_schedule(vk_event, weekday, group):
         random_id=get_random_id(),
         message=msg
     )
+    global current_group
+    current_group = load_group(vk_event.user_id)
 
 
 def change_group(vk_event, group):
@@ -528,7 +550,44 @@ def change_group(vk_event, group):
     )
 
 
+professor_names = list(professors.keys())
+
+
+def search_professor_by_surname(surname: str, professor_names_clear: list) -> list:
+    result = []
+    for professor in professor_names_clear:
+        if surname.capitalize() == professor.split()[0]:
+            result.append(professor)
+    return result
+
+
+# разделить имена преподавателей по запятой
+professor_names = [name.strip() for name in ','.join(professor_names).split(',')]
+
+# убрать дубликаты
+professor_names = list(set(professor_names))
+pattern_for_proffesors = r'\d+\s+[п|П]/[г|Г]'
+professor_names_clear = [i for i in professor_names if i not in ['', '--'] and not re.search(pattern_for_proffesors, i)]
+print(professor_names_clear)
+
 # BOT APPEARANCE AND BEHAVIOUR
+def save_group(id, group):
+    with open("users_group.json", "r") as file:
+        data = json.load(file)
+    data[str(id)] = str(group).upper().replace("[", "").replace("]", "").replace("'", "")
+    with open("users_group.json", "w") as file:
+        json.dump(data, file)
+
+
+def load_group(id):
+    try:
+        with open("users_group.json", "r") as file:
+            data = json.load(file)
+        return data[str(id)]
+    except KeyError:
+        return None
+
+
 
 # Buttons
 keyboard = VkKeyboard(one_time=True)
@@ -582,7 +641,11 @@ for event in longpoll.listen():
                 if msg_words[1] in weekdays and check_group_format(msg_words[2]):
                     weekday_schedule(event, msg_words[1], msg_words[2].upper())
         elif len(msg_words) == 2 and msg_words[0] == "найти":
-            proffesors_keyboard(event)
+            if (len(search_professor_by_surname(msg_words[1], professor_names_clear))) > 1:
+                proffesors_keyboard(search_professor_by_surname(msg_words[1], professor_names_clear), event)
+            else:
+                professor_schedule(search_professor_by_surname(msg_words[1], professor_names_clear) , event)
+
         elif event.text.lower() == "погода" or event.text.lower() == "погоду":
             weather_keyboard(event)
         elif event.text.lower() == "сейчас":

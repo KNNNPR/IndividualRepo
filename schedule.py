@@ -138,8 +138,8 @@ professor_names = list(set(professor_names))
 pattern_for_proffesors = r'\d+\s+[п|П]/[г|Г]'
 professor_names_clear = [i for i in professor_names if i not in ['', '--'] and not re.search(pattern_for_proffesors, i)]
 
-print(professor_names_clear)
-print(search_professor_by_surname("Красников", professor_names_clear))
+#print(professor_names_clear)
+#print(search_professor_by_surname("Красников", professor_names_clear))
 
 with open("course1_sch.json", "w") as write_file:
     json.dump(schedule_first, write_file)
