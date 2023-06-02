@@ -10,3 +10,5 @@ def check_group_format(group_number):
         return not None
     else:
         return None
+
+

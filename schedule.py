@@ -118,7 +118,9 @@ schedule_second = get_course_schedule(2)
 schedule_third = get_course_schedule(3)
 
 #print(schedule_first)
-print(professors)
+#print(professors)
+professor_names = list(professors.keys())
+print(professor_names)
 
 with open("course1_sch.json", "w") as write_file:
     json.dump(schedule_first, write_file)

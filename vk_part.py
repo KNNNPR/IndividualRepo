@@ -2,7 +2,7 @@ import datetime
 import json
 import math
 import re
-from random import random
+import random
 import PIL.Image as Image
 import requests
 from vk_api import vk_api, VkUpload
@@ -21,6 +21,7 @@ longpoll = VkLongPoll(vk_session)
 weather_s = "{description}, температура: {temp_min}-{temp_max}\u00b0С\n" \
             "Давление: {pressure} мм рт.ст., влажность: {humidity}%\n" \
             "Ветер: {wind_character}, {wind_speed} м/с, {wind_direction}\n"
+
 eng_to_rus = {"Thunderstorm": "гроза", "Drizzle": "морось", "Rain": "дождь", "Snow": "снег",
               "Mist": "туман", "Smoke": "смог", "Haze": "дымка", "Fog": "туман",
               "Dust": "пыль", "Sand": "песчаная буря", "Ash": "пепел",
@@ -242,6 +243,40 @@ def weather_keyboard(vk_event):
     )
 
 
+def professor_schedule(vk_event, professor):
+    msg = ""
+    professors = proffesors_schedule
+    msg += "Schedule for " + professor + ":\n"
+    curr_sched = professors[professor]
+
+    for weekday, schedule in curr_sched.items():
+        msg += weekday.capitalize() + ":\n"
+        for i, lesson in enumerate(schedule):
+            lesson = i + 1
+            lesson_info = ", ".join(lesson.values())
+            #msg += str(lesson_num) + ") " + lesson_info + "\n"
+
+    vk.messages.send(
+        user_id=vk_event.user_id,
+        random_id=get_random_id(),
+        message=msg
+    )
+
+
+def proffesors_keyboard(professors_list, e):
+    keyboard = VkKeyboard(one_time=True)
+    # Add professor names as buttons
+    for prof_name in professors_list:
+        keyboard.add_button(prof_name, VkKeyboardColor.DEFAULT)
+
+    # Add the "cancel" button at the end
+    keyboard.add_button("Отмена", VkKeyboardColor.NEGATIVE)
+
+    # Set the keyboard to vertical layout and return it
+    keyboard = keyboard.get_keyboard()
+    return keyboard
+
+
 # images
 attachments = []
 photo = upload.photo_messages(photos='src/ikbo-23-22.jpg')[0]
@@ -259,11 +294,6 @@ group_regex = r"И[АВКНМ]{1}БО-[0-9]{2}-1[7-9]{1}"
 current_group = ""
 base_schedule_str = "Расписание на {weekday}, {date}:\n"
 
-
-def is_group(group):
-    return re.search(group_regex, group, re.IGNORECASE) is not None
-
-
 # schedule for each course
 with open("course1_sch.json", "r") as read_file:
     first_course_schedule = json.load(read_file)
@@ -271,7 +301,8 @@ with open("course2_sch.json", "r") as read_file:
     second_course_schedule = json.load(read_file)
 with open("course2_sch.json", "r") as read_file:
     third_course_schedule = json.load(read_file)
-
+with open("professors.json", "r") as read_file:
+    proffesors_schedule = json.load(read_file)
 oddity = 1 if int(week_number) % 2 == 0 else 0
 
 
@@ -475,7 +506,7 @@ def weekday_schedule(vk_event, weekday, group):
                     msg += str(lesson_num) + ") " + ', '.join(day_info) + '\n'
             else:
                 msg += curr_sch[group][weekday]
-        except KeyError:
+        except TypeError:
             msg = "Группы не существует или для нее отсутствует расписание. " \
                   "Пожалуйста, отправьте корректное название группы"
 
@@ -545,11 +576,13 @@ for event in longpoll.listen():
             if len(msg_words) == 2:
                 if msg_words[1] in weekdays:
                     weekday_schedule(event, msg_words[1], current_group)
-                elif is_group(msg_words[1]):
+                elif check_group_format(msg_words[1]):
                     change_group(event, msg_words[1])
             elif len(msg_words) == 3:
-                if msg_words[1] in weekdays and is_group(msg_words[2]):
+                if msg_words[1] in weekdays and check_group_format(msg_words[2]):
                     weekday_schedule(event, msg_words[1], msg_words[2].upper())
+        elif len(msg_words) == 2 and msg_words[0] == "найти":
+            proffesors_keyboard(event)
         elif event.text.lower() == "погода" or event.text.lower() == "погоду":
             weather_keyboard(event)
         elif event.text.lower() == "сейчас":
