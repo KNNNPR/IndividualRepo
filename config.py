@@ -12,3 +12,12 @@ def check_group_format(group_number):
         return None
 
 
+def check_proffesor_pattern(string):
+    str(string)
+    pattern = r'^[А-ЯЁ][а-яё]+\s[А-ЯЁ]\.[А-ЯЁ]\.$'
+    match = re.match(pattern, string)
+    if match:
+        return True
+    else:
+        return False
+
