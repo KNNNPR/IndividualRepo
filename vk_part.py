@@ -312,7 +312,7 @@ todays_date = datetime.date.today()
 group_regex = r"И[АВКНМ]{1}БО-[0-9]{2}-1[7-9]{1}"
 current_group = ""
 base_schedule_str = "Расписание на {weekday}, {date}:\n"
-
+pass_gr = False
 # schedule for each course
 with open("course1_sch.json", "r") as read_file:
     first_course_schedule = json.load(read_file)
@@ -381,8 +381,8 @@ def unknown(vk_event):
 
 def set_current_group(vk_event, group):
     global current_group
-    save_group(vk_event.user_id, group)
-    current_group = load_group(vk_event.user_id)
+    save_group(str(vk_event.user_id), group)
+    current_group = load_group(str(vk_event.user_id))
     vk.messages.send(
         user_id=vk_event.user_id,
         random_id=get_random_id(),
@@ -391,10 +391,10 @@ def set_current_group(vk_event, group):
     )
 
 def print_current_group(vk_event):
-    if current_group == "":
+    if load_group(str(vk_event.user_id)) == None:
         s = "Сначала введите номер группы"
     else:
-        s = "Показываю расписание группы " + current_group.upper()
+        s = "Показываю расписание группы " + current_group
 
     vk.messages.send(
         user_id=vk_event.user_id,
@@ -474,8 +474,9 @@ def print_day_schedule(vk_event, group, day=todays_date, next_week=False):
         message=day_schedule(group, day, for_next_week=next_week),
         keyboard=keyboard.get_keyboard()
     )
-    global current_group
-    current_group = load_group(vk_event.user_id)
+    global current_group, pass_gr
+    current_group = load_group(str(vk_event.user_id))
+    pass_gr = False
 
 def print_week_schedule(vk_event, group, next_week=False):
     msg = ""
@@ -496,12 +497,13 @@ def print_week_schedule(vk_event, group, next_week=False):
         message=msg,
         keyboard=keyboard.get_keyboard()
     )
-    global current_group
-    current_group = load_group(vk_event.user_id)
+    global current_group, pass_gr
+    current_group = load_group(str(vk_event.user_id))
+    pass_gr = False
 
 def weekday_schedule(vk_event, weekday, group):
     msg = ""
-    if group == "":
+    if load_group(str(vk_event.user_id)) == None:
         msg += "Сначала введите номер группы"
     else:
         msg += weekday.capitalize() + ", нечетная неделя:\n"
@@ -535,8 +537,9 @@ def weekday_schedule(vk_event, weekday, group):
         random_id=get_random_id(),
         message=msg
     )
-    global current_group
-    current_group = load_group(vk_event.user_id)
+    global current_group, pass_gr
+    current_group = load_group(str(vk_event.user_id))
+    pass_gr = False
 
 
 def change_group(vk_event, group):
@@ -545,9 +548,11 @@ def change_group(vk_event, group):
     vk.messages.send(
         user_id=vk_event.user_id,
         random_id=get_random_id(),
-        message="Показать расписание группы " + group.upper() + "...",
+        message="Показать расписание группы " + group.upper(),
         keyboard=keyboard.get_keyboard()
     )
+    global pass_gr
+    pass_gr = True
 
 
 professor_names = list(professors.keys())
@@ -605,6 +610,8 @@ for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW and event.to_me:
         msg_words = event.text.lower().split()
         print('id{}: "{}"'.format(event.user_id, event.text), end='\n')
+        if current_group == "" or current_group == None:
+            current_group = load_group(str(event.user_id))
         if event.text.lower() == "начать":
             greeting(event)
             instructions(event)
@@ -664,3 +671,5 @@ for event in longpoll.listen():
             )
         else:
             unknown(event)
+        if current_group != load_group(str(event.user_id)) and pass_gr == False:
+            current_group = load_group(str(event.user_id))
