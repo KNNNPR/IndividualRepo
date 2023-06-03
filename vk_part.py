@@ -453,7 +453,8 @@ def day_schedule(group, day=todays_date, for_next_week=False):
     else:
         # Получим расписание выбранной группы, используя функцию choose_schedule
         curr_schedule = choose_schedule(group)
-
+        if curr_schedule is not None:
+            print("Победа 3")
         lesson_num = 0
 
         try:
@@ -629,10 +630,10 @@ for event in longpoll.listen():
         if current_group == "" or current_group == None:
             current_group = load_group(str(event.user_id))
 
-        if pass_prof == True and event.text.lower() == "расписание на сегодня":
-            temp = str(search_professor_by_surname(current_proffesor, professor_names_clear)[0])
-            print(temp)
-            print_day_schedule(event, temp)
+        # if pass_prof == True and event.text.lower() == "расписание на сегодня":
+        #     temp = str(search_professor_by_surname(current_proffesor, professor_names_clear)[0])
+        #     print(temp)
+        #     print_day_schedule(event, temp)
 
         elif event.text.lower() == "начать":
             greeting(event)
