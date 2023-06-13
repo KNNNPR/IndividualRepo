@@ -1,6 +1,6 @@
-token = 'vk1.a.kNPB4DdK-yJVXRimG-A6RZ6xaMzaUt9inPbhiywknCv4q1l5SKBdh6Ir_srrvVi7mUP7JqTen5b8C5mRzvJqY1WyOAPO_R9Fi_PvOe_9dvdDoC-peeAGEg2HBKhbogUFGtR-2VxHeHGHwbzf6yvsNUG1VZ9BsDEXe3nDXGSPCQw0qaRXma1S8w3Vg55Rv9s-CuoBVbOZbM5BzNPdj7hZ4A'
+token = ''
 weather_api_key = "467e9329e78d70b728147eb922f99675"
-group_id = 'club220830792'
+group_id = ''
 
 import re
 def check_group_format(group_number):
