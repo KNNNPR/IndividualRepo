@@ -117,8 +117,8 @@ schedule_first = get_course_schedule()
 schedule_second = get_course_schedule(2)
 schedule_third = get_course_schedule(3)
 
-# print(schedule_first)
-# print(professors)
+#print(schedule_first)
+#print(professors)
 professor_names = list(professors.keys())
 
 
