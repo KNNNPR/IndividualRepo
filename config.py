@@ -1,4 +1,4 @@
-token = ''
+token = 'There was nothing'
 weather_api_key = "467e9329e78d70b728147eb922f99675"
 group_id = ''
 
